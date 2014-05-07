@@ -53,7 +53,6 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
-    private int test = 42;
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="helloworld-v1-1.18.1-rc-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/src/libs/helloworld-v1-1.18.1-rc-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

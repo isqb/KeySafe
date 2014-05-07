@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">KeySafe</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="toast_no_google_account_selected">No Google Account Selected</string>
+    <string name="toast_exception_checking_authorization">Exception checking authorization</string>
+    <string name="toast_no_google_accounts_registered">No Google Accounts Registered</string>
+    <string name="toast_only_one_google_account_registered">Your only registered Google account was
+    selected</string>
+    <string name="logginmessage">Not logged in</string>
+    <string name="safeIDmessage">Safe ID to get</string>
+    <string name="title_activity_nfclogin">NFClogin</string>
+    <string name="explanation">Sorry...</string>
+
+</resources>

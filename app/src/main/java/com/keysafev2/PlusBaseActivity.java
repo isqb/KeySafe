@@ -72,6 +72,10 @@ public abstract class PlusBaseActivity extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(mPlusClient != null)
+            signOut();
+        if(getPlusClient() != null)
+            getPlusClient().disconnect();
         // Initialize the PlusClient connection.
         // Scopes indicate the information about the user your application will be able to access.
         mPlusClient =
@@ -84,23 +88,25 @@ public abstract class PlusBaseActivity extends Activity
      */
     public void signIn() {
         if (!mPlusClient.isConnected()) {
-            // Show the dialog as we are now signing in.
-            setProgressBarVisible(true);
-            // Make sure that we will start the resolution (e.g. fire the intent and pop up a
-            // dialog for the user) for any errors that come in.
-            mAutoResolveOnFail = true;
-            // We should always have a connection result ready to resolve,
-            // so we can start that process.
-            if (mConnectionResult != null) {
-                startResolution();
-            } else {
-                // If we don't have one though, we can start connect in
-                // order to retrieve one.
-                initiatePlusClientConnect();
+            if (!mPlusClient.isConnected()) {
+                // Show the dialog as we are now signing in.
+                setProgressBarVisible(true);
+                // Make sure that we will start the resolution (e.g. fire the intent and pop up a
+                // dialog for the user) for any errors that come in.
+                mAutoResolveOnFail = true;
+                // We should always have a connection result ready to resolve,
+                // so we can start that process.
+                if (mConnectionResult != null) {
+                    startResolution();
+                } else {
+                    // If we don't have one though, we can start connect in
+                    // order to retrieve one.
+                    initiatePlusClientConnect();
+                }
             }
-        }
 
-        updateConnectButtonState();
+            updateConnectButtonState();
+        }
     }
 
     /**
@@ -170,7 +176,10 @@ public abstract class PlusBaseActivity extends Activity
     @Override
     protected void onStart() {
         super.onStart();
-        initiatePlusClientConnect();
+        if(mPlusClient.isConnected()) {
+            mPlusClient.disconnect();
+            signOut();
+        }
     }
 
     @Override

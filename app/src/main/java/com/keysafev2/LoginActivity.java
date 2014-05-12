@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,21 +27,26 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.os.Parcelable;
 
 import com.appspot.innocreatekey.helloworld.Helloworld;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.android.gms.plus.PlusClient;
+import com.google.android.gms.plus.model.people.Person;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.devrel.samples.helloendpoints.R;
 
 /**
  * A login screen that offers login via email/password and via Google+ sign in.
  */
-public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<Cursor>{
+public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<Cursor>, Serializable{
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -49,6 +55,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
+    private static final String TAG = "";
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -61,12 +68,22 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     private SignInButton mPlusSignInButton;
     private View mSignOutButtons;
     private View mLoginFormView;
+    private PlusClient mPlusClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        if(getPlusClient() != null)
+            if(getPlusClient().isConnected()) {
+                getPlusClient().disconnect();
+                onPlusClientSignOut();
+            }
 
+        if(mAuthTask != null) {
+            onPlusClientSignOut();
+        }
+        setContentView(R.layout.activity_login);
+        Log.i( TAG, "Whats going onnnn" );
         // Find the Google+ sign in button.
         mPlusSignInButton = (SignInButton) findViewById(R.id.plus_sign_in_button);
         if (supportsGooglePlayServices()) {
@@ -84,6 +101,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             return;
         }
 
+
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -93,7 +112,6 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
                     return true;
                 }
                 return false;
@@ -116,8 +134,23 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
     protected void onRestart() {
         super.onRestart();
-        if(getPlusClient().isConnected())
+        if(getPlusClient().isConnected()) {
             getPlusClient().disconnect();
+            onPlusClientSignOut();
+            signOut();
+            mAuthTask = null;
+        }
+
+    }
+
+    protected void onResume() {
+        super.onResume();
+        if(getPlusClient().isConnected()) {
+            getPlusClient().disconnect();
+            onPlusClientSignOut();
+            signOut();
+            mAuthTask = null;
+        }
     }
 
     private void populateAutoComplete() {
@@ -232,6 +265,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     @Override
     protected void onPlusClientSignIn() {
         //Set up sign out and disconnect buttons.
+
+        /*
         Button signOutButton = (Button) findViewById(R.id.plus_sign_out_button);
         signOutButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -246,6 +281,14 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 revokeAccess();
             }
         });
+        */
+        String email = getPlusClient().getAccountName();
+        Person user = getPlusClient().getCurrentPerson();
+
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class).putExtra("email", email);
+        startActivity(intent);
+
+
     }
 
     @Override
@@ -410,9 +453,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         protected void onPostExecute(final Boolean success) {
             showProgress(false);
             if (success) {
-                super.onPostExecute(success);
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();

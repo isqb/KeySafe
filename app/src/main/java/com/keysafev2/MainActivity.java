@@ -1,6 +1,7 @@
 package com.keysafev2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
@@ -31,6 +32,7 @@ import com.google.devrel.samples.helloendpoints.R.id;
 import static com.google.devrel.samples.helloendpoints.BuildConfig.DEBUG;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +49,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "MainActivity";
+    private static final String TAG = "";
     private GreetingsDataAdapter listAdapter;
 
     private static final int ACTIVITY_RESULT_FROM_ACCOUNT_SELECTION = 2222;
@@ -60,23 +63,44 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        /*Get user credentials
-        settings = getSharedPreferences("LoginActivity", 0);
-        credentials = GoogleAccountCredential.usingAudience(this,AppConstants.AUDIENCE);
-
-
-        // Create a Google credential since this is an authenticated request to the API.
-        GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(MainActivity.this, AppConstants.AUDIENCE);
-        credential.getGoogleAccountManager();
-        // Retrieve service handle using credential since this is an authenticated call.
-        Helloworld apiServiceHandle = AppConstants.getApiServiceHandle(credential);
+        Serializable extra = null;
+        PlusClient extra2 = null;
         try {
-            apiServiceHandle.greetings().authed();
-        } catch (IOException e) {
+            extra = getIntent().getSerializableExtra("email");
+            extra2 = (PlusClient) getIntent().getParcelableExtra("test");
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        */
+        if(extra == null)
+            Log.i(TAG, "extra is null!");
+        if(extra2 == null)
+            Log.i(TAG, "extra2 is null!");
+        else {
+            String extra_str = extra.toString();
+            Log.i(TAG, "extra is: " + extra_str);
+            String mEmailAccount = extra_str;
+            performAuthCheck(mEmailAccount);
+
+            mPlusClient = extra2;
+            String test = mPlusClient.getAccountName();
+            Log.i(TAG, test);
+            /*Get user credentials  */
+            // Create a Google credential since this is an authenticated request to the API.
+            GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(MainActivity.this, AppConstants.AUDIENCE);
+            credential.setSelectedAccountName(mEmailAccount);
+            // Retrieve service handle using credential since this is an authenticated call.
+            Helloworld apiServiceHandle = AppConstants.getApiServiceHandle(credential);
+            View view = null;
+            TextView emailAddressTV = (TextView) view.getRootView().findViewById(id.email_address_tv);
+            emailAddressTV.setText(mEmailAccount);
+            try {
+                apiServiceHandle.greetings().authed();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
 
         // Prevent the keyboard from being visible upon startup.
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -335,9 +359,9 @@ public class MainActivity extends Activity {
 
         sendData.execute((Void)null);
     }
-
+    /*
     public void onClickSignIn(View view) {
-        TextView emailAddressTV = (TextView) view.getRootView().findViewById(id.email_address_tv);
+
         // Check to see how many Google accounts are registered with the device.
         int googleAccounts = AppConstants.countGoogleAccounts(this);
         if (googleAccounts == 0) {
@@ -371,6 +395,7 @@ public class MainActivity extends Activity {
         }
 
     }
+    */
 
     public void onClickSignOut(View view) {
         if(mAuthTask != null) {
@@ -380,10 +405,11 @@ public class MainActivity extends Activity {
                 e.printStackTrace();
             }
         }
-        Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[] {"com.google"}, false, null, null, null, null);
-        startActivityForResult(intent, 6789);
-        Intent myIntent = new Intent(this,LoginActivity.class);
-        startActivity(myIntent);
+        if(mPlusClient != null) {
+            if (mPlusClient.isConnected())
+                mPlusClient.disconnect();
+        }
+        startActivity(new Intent(MainActivity.this, LoginActivity.class));
     }
 
     private boolean isSignedIn() {
